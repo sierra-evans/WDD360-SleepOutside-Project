@@ -1,5 +1,5 @@
 import { defineCollection } from "astro:content";
-import { glob, file } from "astro/loaders"; // Not available with legacy API
+import { file } from "astro/loaders"; // Not available with legacy API
 
 // we can also create collections that load from markdown files in a directory...this is an example of how to do that.
 // const posts = defineCollection({
