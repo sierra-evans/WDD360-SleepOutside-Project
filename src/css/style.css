@@ -278,6 +278,15 @@ button {
   grid-column: 3;
 }
 
+.cart-footer {
+  text-align: right;
+  font-size: var(--large-font);
+}
+
+.hide {
+  display: none;
+}
+
 @media screen and (min-width: 500px) {
   body {
     max-width: 1080px;
