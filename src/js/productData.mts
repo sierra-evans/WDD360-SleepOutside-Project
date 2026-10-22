@@ -1,11 +1,11 @@
+import type { Product } from "./types.mts";
 const baseURL = import.meta.env.PUBLIC_SERVER_URL;
 
-import type { Product } from "./types.mts"
 function convertToJson(res: Response) {
   if (res.ok) {
     return res.json();
   } else {
-    throw new Error("Bad Response");
+    throw new Error(`Bad Response:  ${res.status} ${res.url}`);
   }
 }
 
