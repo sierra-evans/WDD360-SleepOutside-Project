@@ -305,3 +305,49 @@ footer {
   font-size: var(--small-font);
   padding: 1em;
 }
+
+/* Item Category Grid for src/pages/index.astro */
+.category-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.category-card a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  text-align: center;
+}
+
+.category-card a:hover {
+  border-color: #000;
+}
+
+.category-card img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+.category-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* 2x2 on small screens */
+@media (max-width: 600px) {
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
