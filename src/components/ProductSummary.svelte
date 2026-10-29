@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Product } from "../js/types.mts";
+  import WishlistButton from "./WishlistButton.svelte";
   let { product }: { product: Product } = $props();
 </script>
 
@@ -10,4 +11,5 @@
     <h2 class="card__name">{product.nameWithoutBrand}</h2>
     <p class="product-card__price">${product.finalPrice}</p></a
   >
+   <WishlistButton productId={product.id} />
 </li>
