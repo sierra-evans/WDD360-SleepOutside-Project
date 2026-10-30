@@ -10,13 +10,19 @@ function renderCartContents() {
 }
 
 function renderCartTotal(cartItems: Product[]) {
-  if (cartItems.length === 0) return;
-
   const footerEl = document.querySelector(".cart-footer");
   const totalEl = document.querySelector(".cart-total");
+
   if (!footerEl || !totalEl) return;
 
+  // If the cart is empty, hide the footer and reset the total
+  if (cartItems.length === 0) {
+    footerEl.classList.add("hide");
+    totalEl.innerHTML = "Total: $0.00";
+    return;
+  }
   const total = cartItems.reduce((sum, item) => sum + item.finalPrice, 0);
+
   footerEl.classList.remove("hide");
   totalEl.innerHTML = `Total: $${total.toFixed(2)}`;
 }
