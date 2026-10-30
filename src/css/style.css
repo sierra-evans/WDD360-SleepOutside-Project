@@ -345,6 +345,19 @@ footer {
   font-size: 1rem;
 }
 
+/* CSS FOR REMOVE ITEM BUTTON */
+.cart-card_remove {
+  grid-row: 1;
+  grid-column: 3;
+  justify-self: end;
+  align-self: start;
+  margin: 0;
+  padding: 2px 8px;
+  background: var(--secondary-color);
+  color: var(--light-grey);
+  font-size: inherit;
+}
+
 /* 2x2 on small screens */
 @media (max-width: 600px) {
   .category-grid {
