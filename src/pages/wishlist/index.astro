@@ -1,0 +1,10 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import WishlistItems from "../../components/WishlistItems.svelte";
+---
+<Layout>
+  <main>
+    <h1>Wish List</h1>
+    <WishlistItems client:load />
+  </main>
+</Layout>

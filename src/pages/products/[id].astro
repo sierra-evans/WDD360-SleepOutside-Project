@@ -1,5 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import WishlistButton from "../../components/WishlistButton.svelte";
 import { type CollectionEntry, getCollection } from "astro:content";
 
 
@@ -45,6 +46,7 @@ const title = product.data.name;
 
         <div class="product-detail__add">
           <button id="addToCart" data-id={product.id}>Add to Cart</button>
+          <WishlistButton client:load productId={product.id} />
         </div>
       </section>
     </main>
