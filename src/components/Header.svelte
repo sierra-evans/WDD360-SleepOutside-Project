@@ -1,5 +1,27 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import UserMenu from "./UserMenu.svelte";
+
+  let cartBump = $state(false);
+  let cartAnnouncement = $state("");
+
+  function onItemAdded() {
+    // Remove the class and add it back on the next frame so the animation replays on every add.
+    cartBump = false;
+    requestAnimationFrame(() => {
+      cartBump = true;
+    });
+    // Screen readers can't see the animation, so announce the change too.
+    cartAnnouncement = "";
+    setTimeout(() => {
+      cartAnnouncement = "Item added to cart";
+    }, 100);
+  }
+
+  onMount(() => {
+    window.addEventListener("cart:item-added", onItemAdded);
+    return () => window.removeEventListener("cart:item-added", onItemAdded);
+  });
 </script>
 
 <header class="divider">
@@ -12,7 +34,8 @@
       <!-- No client:load needed here: child components are hydrated along with the Header. -->
       <UserMenu />
     </div>
-    <div class="cart">
+    <div class="cart" class:bump={cartBump} onanimationend={() => (cartBump = false)}>
+      <span class="visually-hidden" aria-live="polite">{cartAnnouncement}</span>
       <a
         href="/cart/"
         aria-label="Shopping Cart"
@@ -45,3 +68,58 @@
     </div>
   </nav>
 </header>
+
+<style>
+  /* Bounce and wiggle the backpack when something is added to the cart */
+  .cart.bump svg {
+    animation: cart-bump 0.7s ease-in-out;
+    transform-origin: 50% 100%;
+  }
+  @keyframes cart-bump {
+    0% {
+      transform: scale(1) rotate(0);
+    }
+    20% {
+      transform: scale(1.25) rotate(-12deg);
+      fill: var(--primary-color);
+    }
+    40% {
+      transform: scale(1.25) rotate(10deg);
+    }
+    60% {
+      transform: scale(1.15) rotate(-6deg);
+      fill: var(--primary-color);
+    }
+    80% {
+      transform: scale(1.05) rotate(3deg);
+    }
+    100% {
+      transform: scale(1) rotate(0);
+    }
+  }
+
+  /* Users who ask for less motion just get the color flash */
+  @media (prefers-reduced-motion: reduce) {
+    .cart.bump svg {
+      animation-name: cart-flash;
+    }
+    @keyframes cart-flash {
+      30%,
+      70% {
+        fill: var(--primary-color);
+      }
+    }
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
