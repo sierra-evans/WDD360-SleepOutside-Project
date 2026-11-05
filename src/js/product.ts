@@ -7,6 +7,8 @@ function addProductToCart(product: Product) {
   const cartItems = getLocalStorage("so-cart") || [];
   cartItems.push(product);
   setLocalStorage("so-cart", cartItems);
+  // Let the Header (a Svelte component) know so it can animate the cart icon.
+  window.dispatchEvent(new CustomEvent("cart:item-added", { detail: product }));
 }
 // add to cart button event handler
 async function addToCartHandler(e: Event) {
