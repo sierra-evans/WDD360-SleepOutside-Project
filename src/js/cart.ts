@@ -1,8 +1,8 @@
-import { getLocalStorage, setLocalStorage } from "./utils.mjs";
 import type { Product } from "./types.mjs";
+import { getCart, saveCart } from "./cartStore.svelte.ts";
 
 function renderCartContents() {
-  const cartItems: Product[] = getLocalStorage("so-cart") || [];
+  const cartItems: Product[] = getCart();
   const htmlItems = cartItems.map((item: Product) => cartItemTemplate(item));
   const listEl = document.querySelector(".product-list");
   if (listEl) listEl.innerHTML = htmlItems.join("");
@@ -30,10 +30,10 @@ function renderCartTotal(cartItems: Product[]) {
 // REMOVE FROM CART FEATURE
 function removeItem(id: string) {
   // Get current cart from local storage and create new cart without the clicked on item
-  const cartItems: Product[] = getLocalStorage("so-cart") || [];
+  const cartItems: Product[] = getCart();
   const updatedCart = cartItems.filter((item: Product) => item.id !== id);
-  // Save updated cart to local storage and update the displayed cart
-  setLocalStorage("so-cart", updatedCart);
+  // Save updated cart to local storage (this also updates the header count) and update the displayed cart
+  saveCart(updatedCart);
   renderCartContents();
 }
 
