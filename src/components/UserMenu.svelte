@@ -1,5 +1,16 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { userStore, logout } from "../js/auth.svelte";
+
+  function logoutHandler(e: MouseEvent) {
+    e.preventDefault();
+    logout();
+    visible = false;
+    // don't leave the user sitting on a protected page after logging out
+    if (window.location.pathname.startsWith("/profile")) {
+      window.location.href = "/";
+    }
+  }
 
   let visible = $state(false);
 
@@ -39,6 +50,9 @@
 </script>
 
 <div class="user">
+  {#if userStore.isLoggedIn && userStore.user?.name}
+    <span>{userStore.user.name}</span>
+  {/if}
   <button
     class="user__button"
     aria-label="user management"
@@ -49,9 +63,13 @@
   </button>
   
   <nav class="user__menu" class:open={visible}>
-    <a href="#">Login</a>
-    <a href="#">Profile</a>
-    <a href="#">Orders</a>
+    {#if userStore.isLoggedIn}
+      <a href="/" onclick={logoutHandler}>Logout</a>
+      <a href="/profile/">Profile</a>
+      <a href="#">Orders</a>
+    {:else}
+      <a href="/login/">Login</a>
+    {/if}
   </nav>
 </div>
 
