@@ -1,12 +1,12 @@
 import type { Product } from "./types.mts";
-import { getLocalStorage } from "./utils.mts";
-import { setLocalStorage } from "./utils.mts";
 import { findProductById } from "./productData.mts";
+import { getCart, saveCart } from "./cartStore.svelte.ts";
 
 function addProductToCart(product: Product) {
-  const cartItems = getLocalStorage("so-cart") || [];
+  const cartItems = getCart();
   cartItems.push(product);
-  setLocalStorage("so-cart", cartItems);
+  // saveCart also updates the item count shown on the backpack icon
+  saveCart(cartItems);
   // Let the Header (a Svelte component) know so it can animate the cart icon.
   window.dispatchEvent(new CustomEvent("cart:item-added", { detail: product }));
 }

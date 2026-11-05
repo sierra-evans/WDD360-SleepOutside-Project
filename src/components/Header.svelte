@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import UserMenu from "./UserMenu.svelte";
+  import { cartState, refreshCartCount } from "../js/cartStore.svelte";
 
   let cartBump = $state(false);
   let cartAnnouncement = $state("");
@@ -19,8 +20,17 @@
   }
 
   onMount(() => {
+    refreshCartCount();
     window.addEventListener("cart:item-added", onItemAdded);
-    return () => window.removeEventListener("cart:item-added", onItemAdded);
+    // "storage" fires when another tab changes local storage.
+    // "pageshow" fires when the browser's back button restores this page from cache.
+    window.addEventListener("storage", refreshCartCount);
+    window.addEventListener("pageshow", refreshCartCount);
+    return () => {
+      window.removeEventListener("cart:item-added", onItemAdded);
+      window.removeEventListener("storage", refreshCartCount);
+      window.removeEventListener("pageshow", refreshCartCount);
+    };
   });
 </script>
 
@@ -38,9 +48,12 @@
       <span class="visually-hidden" aria-live="polite">{cartAnnouncement}</span>
       <a
         href="/cart/"
-        aria-label="Shopping Cart"
+        aria-label={`Shopping Cart, ${cartState.count} ${cartState.count === 1 ? "item" : "items"}`}
         title="Shopping Cart"
       >
+        {#if cartState.count > 0}
+          <sup class="cart-count" aria-hidden="true">{cartState.count}</sup>
+        {/if}
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
           <path
             d="M18.9 32.6c1.1 2.4 2.5 3.3 5.4 3.3 1.6 0 3.6-0.3 5.9-0.6 3.2-0.5 6.9-1 11.2-1 2.1 0 4.3 0.1 6.4 0.3 2.1 0.1 4.2 0.3 6.1 0.3 3.2 0 5.2-0.4 5.9-1.2 2.7-2.7 2.8-8.8 2.9-14.6 0.1-6.7 0.2-14.5 4.6-18.7 -0.5 0-1 0-1.6 0 -14.2 0-37.5 0-41.1 0C15.6 6.2 14.9 23.6 18.9 32.6z"
@@ -109,6 +122,24 @@
         fill: var(--primary-color);
       }
     }
+  }
+
+  /* Item count badge on the top-right corner of the backpack icon */
+  .cart-count {
+    position: absolute;
+    top: -0.4em;
+    right: -0.5em;
+    min-width: 1.4em;
+    height: 1.4em;
+    padding: 0 0.3em;
+    border-radius: 0.7em;
+    background-color: var(--primary-color);
+    color: var(--dark-grey);
+    font-size: 0.75em;
+    font-weight: bold;
+    line-height: 1.4em;
+    text-align: center;
+    pointer-events: none;
   }
 
   .visually-hidden {
