@@ -13,7 +13,19 @@ const products = defineCollection({
     if (!base) throw new Error("PUBLIC_SERVER_URL is not set");
 
     const url = new URL("products?limit=200", base.endsWith("/") ? base : base + "/");
-    const response = await fetch(url);
+    let response;
+    try {
+      response = await fetch(url);
+    } catch (err) {
+      // fetch only throws (rather than returning a bad status) when nothing answered at all,
+      // which almost always means the API server isn't running.
+      throw new Error(
+        `Could not reach the API server at ${url} (${err.cause?.code ?? err.message}).\n` +
+          `The product pages are built from the API, so start the server first:\n` +
+          `  cd ../sleepOutsideServer && npm run dev\n` +
+          `then run this command again.`
+      );
+    }
     if (!response.ok) {
       throw new Error(`Products fetch failed: ${response.status} ${url}`);
     }
