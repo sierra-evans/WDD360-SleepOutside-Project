@@ -1,6 +1,7 @@
 <script lang="ts">
   import { userStore, logout, checkAuth } from "../js/auth.svelte";
   import { onMount } from "svelte";
+  import ChangePassword from "./ChangePassword.svelte";
   const baseURL = import.meta.env.PUBLIC_SERVER_URL;
   let profile = $state<{ message: string } | null>(null);
 
@@ -42,6 +43,7 @@
 {#if userStore.isLoggedIn}
   {#if profile}
     <p>{profile.message}</p>
+    <ChangePassword />
   {:else}
     <p>Loading...</p>
   {/if}
