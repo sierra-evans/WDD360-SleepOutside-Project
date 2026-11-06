@@ -34,6 +34,43 @@ export async function login(email: string, password: string) {
   }
 }
 
+// Thrown when the server rejects our token (missing/expired/invalid), so callers can tell
+// "log in again" apart from ordinary errors like a wrong current password.
+export class SessionExpiredError extends Error {
+  constructor(message = "Your session has expired. Please log in again.") {
+    super(message);
+    this.name = "SessionExpiredError";
+  }
+}
+
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const res = await fetch(`${baseURL}users/password`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${userStore.token}`,
+    },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+
+  // the authorize middleware answers 401 (no token) or 403 (bad/expired token)
+  if (res.status === 401 || res.status === 403) {
+    logout();
+    throw new SessionExpiredError();
+  }
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error?.message || data.message || "Could not change password");
+  }
+  // Changing the password revokes the token we just used, so switch to the new one the server sent.
+  if (data.token) {
+    userStore.token = data.token;
+    setLocalStorage("so-user", userStore);
+  }
+  return data;
+}
+
 export function logout() {
   userStore.user = undefined;
   userStore.token = "";
@@ -46,9 +83,13 @@ export function checkAuth() {
   // that happens the next time we use it. If the server rejects it, we log out.
   const userData = getLocalStorage("so-user");
   if (userData?.token) {
-    userStore.user = userData.user;
+    // Only keep the fields we use. Older versions of the server sent back the whole user record
+    // (including the password hash), so this also cleans that out of anyone's existing local storage.
+    const { _id, email, name } = userData.user || {};
+    userStore.user = { _id, email, name };
     userStore.token = userData.token;
     userStore.isLoggedIn = true;
+    setLocalStorage("so-user", userStore);
   } else {
     userStore.isLoggedIn = false;
     userStore.user = undefined;
