@@ -47,3 +47,11 @@ export interface Brand {
   logoSrc: string;
   name: string;
 }
+
+export interface ProductComment {
+  id: string;
+  productId: string;
+  name: string;
+  text: string;
+  createdAt: string; // ISO date string
+}
