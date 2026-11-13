@@ -1,15 +1,40 @@
-import type { Product } from "./types.mjs";
-import { getCart, saveCart } from "./cartStore.svelte.ts";
+import {
+  getCart,
+  setQuantity,
+  removeFromCart,
+  lineTotal,
+  cartTotal,
+  countItems,
+  MAX_QUANTITY,
+  type CartItem,
+} from "./cartStore.svelte.ts";
+
+const listEl = document.querySelector(".product-list");
 
 function renderCartContents() {
-  const cartItems: Product[] = getCart();
-  const htmlItems = cartItems.map((item: Product) => cartItemTemplate(item));
-  const listEl = document.querySelector(".product-list");
-  if (listEl) listEl.innerHTML = htmlItems.join("");
+  const cartItems = getCart();
+  // Re-rendering replaces the buttons and inputs, so remember which control had focus
+  // (e.g. the + button someone is clicking repeatedly) and put focus back afterwards.
+  const focused = document.activeElement as HTMLElement | null;
+  const focusKey = focused?.dataset.id ? { id: focused.dataset.id, action: focused.dataset.action } : null;
+
+  if (listEl) listEl.innerHTML = cartItems.map(cartItemTemplate).join("");
   renderCartTotal(cartItems);
+
+  if (focusKey && listEl) {
+    const target = listEl.querySelector<HTMLElement>(
+      `[data-id="${CSS.escape(focusKey.id)}"][data-action="${focusKey.action}"]`
+    );
+    // a − button that just became disabled (quantity hit 1) can't take focus, so fall back to the input
+    if (target && !(target as HTMLButtonElement).disabled) {
+      target.focus();
+    } else {
+      listEl.querySelector<HTMLElement>(`[data-id="${CSS.escape(focusKey.id)}"][data-action="set"]`)?.focus();
+    }
+  }
 }
 
-function renderCartTotal(cartItems: Product[]) {
+function renderCartTotal(cartItems: CartItem[]) {
   const footerEl = document.querySelector(".cart-footer");
   const totalEl = document.querySelector(".cart-total");
 
@@ -21,37 +46,40 @@ function renderCartTotal(cartItems: Product[]) {
     totalEl.innerHTML = "Total: $0.00";
     return;
   }
-  const total = cartItems.reduce((sum, item) => sum + item.finalPrice, 0);
+  const count = countItems(cartItems);
 
   footerEl.classList.remove("hide");
-  totalEl.innerHTML = `Total: $${total.toFixed(2)}`;
+  totalEl.innerHTML = `Total (${count} ${count === 1 ? "item" : "items"}): $${cartTotal(cartItems).toFixed(2)}`;
 }
 
-// REMOVE FROM CART FEATURE
-function removeItem(id: string) {
-  // Get current cart from local storage and create new cart without the clicked on item
-  const cartItems: Product[] = getCart();
-  const updatedCart = cartItems.filter((item: Product) => item.id !== id);
-  // Save updated cart to local storage (this also updates the header count) and update the displayed cart
-  saveCart(updatedCart);
-  renderCartContents();
-}
-
-function cartItemTemplate(item: Product) {
+function cartItemTemplate(item: CartItem) {
+  const atMin = item.quantity <= 1;
+  const atMax = item.quantity >= MAX_QUANTITY;
   const newItem = `<li class="cart-card divider">
-  <a href="#" class="cart-card__image">
+  <a href="/products/${item.id}/" class="cart-card__image">
     <img
       src="${item.images.primaryExtraLarge}"
       alt="${item.name}"
     />
   </a>
-  <a href="#">
+  <a href="/products/${item.id}/">
     <h2 class="card__name">${item.name}</h2>
   </a>
-  <p class="cart-card__color">${item.colors[0].colorName}</p>
-  <p class="cart-card__quantity">qty: 1</p>
-  <p class="cart-card__price">$${item.finalPrice}</p>
-  <button class="cart-card_remove" data-id="${item.id}">X</button>
+  <p class="cart-card__color">${item.colors[0]?.colorName ?? ""}</p>
+  <div class="cart-card__quantity">
+    <button type="button" class="qty-btn" data-action="decrease" data-id="${item.id}"
+      aria-label="Decrease quantity of ${item.name}" ${atMin ? "disabled" : ""}>&minus;</button>
+    <label class="visually-hidden" for="qty-${item.id}">Quantity of ${item.name}</label>
+    <input id="qty-${item.id}" class="qty-input" type="number" inputmode="numeric"
+      min="1" max="${MAX_QUANTITY}" step="1" value="${item.quantity}" data-action="set" data-id="${item.id}" />
+    <button type="button" class="qty-btn" data-action="increase" data-id="${item.id}"
+      aria-label="Increase quantity of ${item.name}" ${atMax ? "disabled" : ""}>+</button>
+  </div>
+  <p class="cart-card__price">
+    $${lineTotal(item).toFixed(2)}
+    ${item.quantity > 1 ? `<small>$${item.finalPrice.toFixed(2)} each</small>` : ""}
+  </p>
+  <button class="cart-card_remove" data-action="remove" data-id="${item.id}" aria-label="Remove ${item.name} from cart">X</button>
 </li>`;
 
   return newItem;
@@ -59,17 +87,45 @@ function cartItemTemplate(item: Product) {
 
 renderCartContents();
 
-// REMOVE FROM CART FEATURE
-const listEl = document.querySelector(".product-list");
-
-// Listen for clicks on product list
+// One listener on the list handles the −, + and X buttons for every item.
 listEl?.addEventListener("click", (event) => {
-  // Grab element that was clicked and find remove button
-  const target = event.target as HTMLElement;
-  const button = target.closest(".cart-card_remove");
-  // Stop if the click wasn't on the remove button
-  if (!button) return;
-  // Get the product id from the button and call removeItem function
-  const id = button.getAttribute("data-id");
-  if (id) removeItem(id);
-})
+  const button = (event.target as HTMLElement).closest<HTMLButtonElement>("button[data-action]");
+  if (!button?.dataset.id) return;
+  const id = button.dataset.id;
+  const item = getCart().find((i) => i.id === id);
+  if (!item) return;
+
+  switch (button.dataset.action) {
+    case "increase":
+      setQuantity(id, item.quantity + 1);
+      break;
+    case "decrease":
+      setQuantity(id, item.quantity - 1);
+      break;
+    case "remove":
+      removeFromCart(id);
+      break;
+    default:
+      return;
+  }
+  renderCartContents();
+});
+
+// Typed-in quantities. "change" fires when the shopper presses Enter, leaves the box, or uses the
+// browser's arrow keys, so we don't re-render (and steal the cursor) while they are still typing.
+// Anything invalid (blank, 0, 2.5, 500) is corrected by setQuantity to the nearest allowed value.
+listEl?.addEventListener("change", (event) => {
+  const input = event.target as HTMLInputElement;
+  if (input.dataset.action !== "set" || !input.dataset.id) return;
+  const id = input.dataset.id;
+  // A blank box (or text a number box can't read, which also comes through as "") means
+  // "never mind", so put back the quantity they already had.
+  const current = getCart().find((i) => i.id === id)?.quantity ?? 1;
+  setQuantity(id, input.value.trim() === "" ? current : Number(input.value));
+  renderCartContents();
+});
+
+// keep this tab's cart in sync if the cart is changed in another tab
+window.addEventListener("storage", (event) => {
+  if (event.key === "so-cart") renderCartContents();
+});

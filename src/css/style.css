@@ -243,16 +243,20 @@ button {
 }
 
 /* Start cart list card styles */
+/* Layout:  image | name       | X
+            image | color      | price
+            image | − [2] +    | price */
 .cart-card {
   display: grid;
-  grid-template-columns: 25% auto 15%;
+  grid-template-columns: 25% 1fr auto;
+  column-gap: 0.75em;
   font-size: var(--small-font);
   /* max-height: 120px; */
   align-items: center;
 }
 
 .cart-card__image {
-  grid-row: 1/3;
+  grid-row: 1/4;
   grid-column: 1;
 }
 .cart-card p {
@@ -269,13 +273,78 @@ button {
 }
 
 .cart-card__quantity {
-  grid-row: 1;
-  grid-column: 3;
+  grid-row: 3;
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  margin-bottom: 0.5em;
+}
+
+.qty-btn {
+  margin: 0;
+  width: 2em;
+  height: 2em;
+  padding: 0;
+  font-size: inherit;
+  line-height: 1;
+}
+
+.qty-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.qty-input {
+  width: 3.5em;
+  height: 2em;
+  box-sizing: border-box;
+  padding: 0 0.25em;
+  font: inherit;
+  text-align: center;
+  border: 1px solid var(--light-grey);
+  border-radius: 4px;
+  /* the −/+ buttons do this job, so hide the browser's own tiny spinner arrows */
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.qty-btn:focus-visible,
+.qty-input:focus-visible {
+  outline: 2px solid var(--secondary-color);
+  outline-offset: 2px;
 }
 
 .cart-card__price {
-  grid-row: 2;
+  grid-row: 2/4;
   grid-column: 3;
+  justify-self: end;
+  text-align: right;
+}
+
+.cart-card__price small {
+  display: block;
+  font-size: var(--small-font);
+  color: var(--dark-grey);
+}
+
+/* Hidden on screen but still read by screen readers (e.g. labels for the quantity boxes) */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .cart-footer {
@@ -297,7 +366,7 @@ button {
   }
   .cart-card {
     font-size: inherit;
-    grid-template-columns: 150px auto 15%;
+    grid-template-columns: 150px 1fr auto;
   }
 }
 
