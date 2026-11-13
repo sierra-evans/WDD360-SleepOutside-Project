@@ -22,8 +22,3 @@ export async function findProductById(id: string) {
   return product;
 }
 
-export async function getRecommendedProducts(id: string): Promise<Product[]> {
-  const response = await fetch(`${baseURL}products/recommended?id=${encodeURIComponent(id)}`);
-  const data = await convertToJson(response);
-  return data.results;
-}
