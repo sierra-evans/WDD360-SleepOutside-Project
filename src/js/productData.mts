@@ -15,6 +15,13 @@ export function getProducts(category = "tents") {
     .then((data) => data);
 }
 
+// PRODUCT SEARCH
+export function searchProducts(term: string) {
+  return fetch(`${baseURL}products?search=${encodeURIComponent(term)}`)
+    .then(convertToJson)
+    .then((data) => data);
+}
+
 export async function findProductById(id: string) {
   const response = await fetch(baseURL + `products/${id}`);
   const product = await convertToJson(response) as Product;
