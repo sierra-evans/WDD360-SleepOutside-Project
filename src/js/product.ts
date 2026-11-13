@@ -1,12 +1,11 @@
 import type { Product } from "./types.mts";
 import { findProductById } from "./productData.mts";
-import { getCart, saveCart } from "./cartStore.svelte.ts";
+import { addToCart } from "./cartStore.svelte.ts";
 
 function addProductToCart(product: Product) {
-  const cartItems = getCart();
-  cartItems.push(product);
-  // saveCart also updates the item count shown on the backpack icon
-  saveCart(cartItems);
+  // addToCart bumps the quantity if the product is already in the cart,
+  // and also updates the item count shown on the backpack icon
+  addToCart(product);
   // Let the Header (a Svelte component) know so it can animate the cart icon.
   window.dispatchEvent(new CustomEvent("cart:item-added", { detail: product }));
 }
