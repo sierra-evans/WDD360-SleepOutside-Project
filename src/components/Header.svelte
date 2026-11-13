@@ -40,6 +40,12 @@
     <a href="/"> Sleep<span class="highlight">Outside</span></a>
   </div>
   <nav class="menu-right">
+  <!-- PRODUCT SEARCH -->
+    <form class="search" action="/product-list/" method="get" role="search">
+      <label for="site-search" class="visually-hidden">Search products</label>
+      <input id="site-search" type="search" name="search" placeholder="Search products" required />
+      <button type="submit">Search</button>
+    </form>
     <div class="user-menu-container">
       <!-- No client:load needed here: child components are hydrated along with the Header. -->
       <UserMenu />
@@ -140,6 +146,47 @@
     line-height: 1.4em;
     text-align: center;
     pointer-events: none;
+  }
+
+  /* PRODUCT SEARCH */
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 0.25em;
+  }
+  .search input {
+    width: 10em;
+    min-width: 0;
+    padding: 0.4em 0.5em;
+    font-size: var(--small-font);
+    border: 1px solid var(--light-grey);
+  }
+  .search input:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 1px;
+  }
+  /* Override the global button rule (display: block, margin: auto, large padding) */
+  .search button {
+    display: inline-block;
+    margin: 0;
+    padding: 0.4em 0.8em;
+    font-size: var(--small-font);
+  }
+
+  /* On phones, give the search box its own full-width row under the logo and icons */
+  @media (max-width: 600px) {
+    header {
+      flex-wrap: wrap;
+    }
+    .search {
+      order: 3;
+      width: 100%;
+      padding-bottom: 0.5em;
+    }
+    .search input {
+      flex: 1;
+      width: auto;
+    }
   }
 
   .visually-hidden {
