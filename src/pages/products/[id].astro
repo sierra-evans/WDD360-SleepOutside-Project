@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import WishlistButton from "../../components/WishlistButton.svelte";
 import { type CollectionEntry, getCollection } from "astro:content";
+import ProductComments from "../../components/ProductComments.svelte";
 
 
 
@@ -26,28 +27,33 @@ const title = product.data.name;
   
    <main class="divider">
       <section class="product-detail">
-        <h3>Marmot</h3>
+  <h3>{product.data.brand.name}</h3>
 
-        <h2 class="divider">Ajax Tent - 3-Person, 3-Season</h2>
+  <h2 class="divider">{product.data.nameWithoutBrand}</h2>
 
-        <img
-          class="divider"
-          src="../images/tents/marmot-ajax-tent-3-person-3-season-in-pale-pumpkin-terracotta~p~880rr_01~320.jpg"
-          alt="Marmot Ajax tent"
-        />
+ <picture>
+  <source media="(min-width: 1000px)" srcset={product.data.images.primaryExtraLarge} />
+  <source media="(min-width: 600px)" srcset={product.data.images.primaryLarge} />
+  <img
+    class="divider"
+    src={product.data.images.primaryMedium}
+    alt={product.data.name}
+  />
+</picture>
 
-        <p class="product-card__price">{product.data.name}</p>
+  <p class="product-card__price">${product.data.finalPrice}</p>
 
-        <p class="product__color">{product.data.name}</p>
+  <p class="product__color">{product.data.colors[0]?.colorName}</p>
 
-        <p class="product__description">
-          {product.data.name}
-        </p>
+  <div class="product__description" set:html={product.data.descriptionHtmlSimple}></div>
 
-        <div class="product-detail__add">
-          <button id="addToCart" data-id={product.id}>Add to Cart</button>
-          <WishlistButton client:load productId={product.id} />
-        </div>
+  <div class="product-detail__add">
+    <button id="addToCart" data-id={product.id}>Add to Cart</button>
+    <WishlistButton client:load productId={product.id} />
+  </div>
+</section>
+      <section class="product-comments">
+        <ProductComments client:load productId={product.id} />
       </section>
     </main>
   

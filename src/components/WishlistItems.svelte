@@ -1,37 +1,54 @@
 <script lang="ts">
+  import { getWishlistIds, removeFromWishlist, isAuthError } from "../js/wishlist";
   import { onMount } from "svelte";
-  import { getWishlistIds, removeFromWishlist } from "../js/wishlist";
   import { findProductById } from "../js/productData.mts";
   import type { Product } from "../js/types.mts";
-  // import { addToCart } from "../js/cart"; // use your real cart function (paste cart.ts and I'll wire it)
 
   let items: Product[] = $state([]);
   let loading = $state(true);
 
-  onMount(async () => {
-    const results = await Promise.allSettled(getWishlistIds().map(findProductById));
+let message = $state("");
+
+onMount(async () => {
+  try {
+    const ids = await getWishlistIds();
+    const results = await Promise.allSettled(ids.map(findProductById));
     items = results
       .filter((r): r is PromiseFulfilledResult<Product> => r.status === "fulfilled")
       .map((r) => r.value);
-    loading = false;
-  });
-
-  function remove(id: string): void {
-    removeFromWishlist(id);
-    items = items.filter((p) => p.id !== id);
+  } catch (err) {
+    message = isAuthError(err)
+      ? "Please log in to see your wish list."
+      : "Could not load your wish list. Please try again.";
   }
+  loading = false;
+});
 
-  function moveToCart(item: Product): void {
-    // addToCart(item);
-    remove(item.id);
+async function remove(id: string): Promise<void> {
+  const previous = items;
+  items = items.filter((p) => p.id !== id);
+  try {
+    await removeFromWishlist(id);
+  } catch {
+    items = previous; // put it back if the server rejected the change
+    message = "Could not remove that item. Please try again.";
   }
+}
+
+function moveToCart(item: Product): void {
+  // addToCart(item);
+  void remove(item.id);
+}
 </script>
 
 {#if loading}
   <p>Loading...</p>
 {:else if items.length === 0}
-  <p>Your wish list is empty.</p>
+  <p>{message || "Your wish list is empty."}</p>
 {:else}
+  {#if message}
+    <p role="alert">{message}</p>
+  {/if}
   <ul class="product-list">
     {#each items as item (item.id)}
       <li class="product-card">
