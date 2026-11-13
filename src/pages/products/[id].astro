@@ -3,6 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import WishlistButton from "../../components/WishlistButton.svelte";
 import { type CollectionEntry, getCollection } from "astro:content";
 import ProductComments from "../../components/ProductComments.svelte";
+import RecommendedProducts from "../../components/RecommendedProducts.svelte";
 
 
 
@@ -22,7 +23,7 @@ const product = Astro.props;
 
 const title = product.data.name;
 ---
-<Layout>
+<Layout title={title}>
   <script src="../../js/product.ts"></script>
   
    <main class="divider">
@@ -55,6 +56,9 @@ const title = product.data.name;
       <section class="product-comments">
         <ProductComments client:load productId={product.id} />
       </section>
+
+      <!-- client:visible loads this only when it scrolls into view, since it sits at the bottom of the page -->
+      <RecommendedProducts client:visible productId={product.id} />
     </main>
   
 </Layout>
